@@ -1,5 +1,5 @@
-const CACHE='dayline-v2-20261116';
-const ASSETS=['./','index.html','styles.css?v=2.0','app.js?v=2.0','icon.svg','manifest.webmanifest','assets/focus.svg','assets/break.svg','assets/meditation.svg','assets/evening.svg'];
+const CACHE='dayline-v2-20261116-r2';
+const ASSETS=['./','index.html','styles.css?v=2.0','app.js?v=2.1','icon.svg','manifest.webmanifest','assets/focus.svg','assets/break.svg','assets/meditation.svg','assets/evening.svg'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('dayline-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',event=>{
