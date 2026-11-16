@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "Dayline - Your day in focus",
+  "short_name": "Dayline",
+  "description": "Live rota, next activity, countdown and gentle alerts",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#09121f",
+  "theme_color": "#09121f",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
