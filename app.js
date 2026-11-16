@@ -225,6 +225,7 @@ function fireTransition(item){
 }
 function monitor(){
  const now=new Date(),day=localDate(now),s=stateAt(day,now),id=s.active?.id||'none';
+ if(lastRealtimeDate&&day!==lastRealtimeDate&&selected===lastRealtimeDate){selected=day;render()}
  if(lastRealtimeId!==undefined&&lastRealtimeDate===day&&id!==lastRealtimeId&&s.active){
   const elapsed=s.t-mins(s.active.start)*60;
   if(elapsed>=0&&elapsed<15)fireTransition(s.active);
@@ -342,7 +343,7 @@ function drawAlertsPanel(){
  $('audioEnabled').onchange=async e=>{
   s.soundEnabled=e.target.checked;
   if(s.soundEnabled){if(await armAudio()){soundPattern('soft');toast('Sounds enabled for this session')}else{s.soundEnabled=false;e.target.checked=false}}
-  persist();
+  persist();renderSoundButton();
  };
  for(let id of ['visualWarning','minuteSound'])$(id).onchange=e=>{s[id]=e.target.checked;persist();renderClockOnly()};
  $('desktopAlerts').onchange=async e=>{
