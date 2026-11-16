@@ -177,7 +177,8 @@ function render(){renderDays();drawHero(stateAt(selected,new Date()))}
 function defaultSoundFor(item){
  if(!item)return model.settings.soundDefault||'chime';
  if(item.sound&&item.sound!=='inherit'&&SOUNDS[item.sound])return item.sound;
- return model.settings.typeSounds?.[item.category]||model.settings.soundDefault||'chime';
+ const choice=model.settings.typeSounds?.[item.category];
+ return choice&&choice!=='inherit'&&SOUNDS[choice]?choice:(model.settings.soundDefault||'chime');
 }
 async function armAudio(){
  try{
@@ -326,7 +327,7 @@ function drawRoutinePanel(){
 function drawAlertsPanel(){
  let s=model.settings,catRows=Object.entries(CATS).map(([key,cat])=>{
   const value=s.typeSounds?.[key]??s.soundDefault;
-  return '<div class="sound-row"><span>'+esc(cat.label)+'</span><select data-category-sound="'+key+'">'+options(SOUNDS,value)+'</select><button class="small-btn" data-preview-category="'+key+'" title="Test sound">▶</button></div>';
+  return '<div class="sound-row"><span>'+esc(cat.label)+'</span><select data-category-sound="'+key+'"><option value="inherit"'+(value==='inherit'?' selected':'')+'>Use general sound</option>'+options(SOUNDS,value)+'</select><button class="small-btn" data-preview-category="'+key+'" title="Test sound">▶</button></div>';
  }).join('');
  $('panelContent').innerHTML=
  '<p class="section-desc">Dayline gently pulses during the final 60 seconds of a block. Optional sounds play when the next activity starts. On Windows, click the speaker in the main window once to unlock audio for this session.</p>'+
@@ -354,7 +355,7 @@ function drawAlertsPanel(){
  $('generalSound').onchange=e=>{s.soundDefault=e.target.value;persist()};
  $('testGeneral').onclick=()=>previewSound($('generalSound').value);
  $('panelContent').querySelectorAll('[data-category-sound]').forEach(el=>el.onchange=e=>{if(!s.typeSounds)s.typeSounds={};s.typeSounds[e.target.dataset.categorySound]=e.target.value;persist()});
- $('panelContent').querySelectorAll('[data-preview-category]').forEach(el=>el.onclick=()=>previewSound(s.typeSounds?.[el.dataset.previewCategory]||s.soundDefault));
+ $('panelContent').querySelectorAll('[data-preview-category]').forEach(el=>el.onclick=()=>{const sound=s.typeSounds?.[el.dataset.previewCategory];previewSound(sound==='inherit'||!sound?s.soundDefault:sound)});
  $('artOpacity').oninput=e=>{s.artOpacity=Number(e.target.value);$('alphaValue').textContent=s.artOpacity+'%';persist();setVisualSettings()};
 }
 function exportRange(){
@@ -414,18 +415,23 @@ $('importFile').addEventListener('change',async e=>{
 });
 $('settingsButton').onclick=()=>{editScope='day';openPanel('day')};
 $('soundButton').onclick=async()=>{
- model.settings.soundEnabled=!model.settings.soundEnabled;
- if(model.settings.soundEnabled){
-  if(await armAudio()){soundPattern('soft');toast('Sound is on. You can customise it using the cog.')}
-  else model.settings.soundEnabled=false;
- }else toast('Sound muted');
+ if(model.settings.soundEnabled&&audioCtx?.state!=='running'){
+  if(await armAudio()){soundPattern('soft');toast('Sound armed for this session')}
+ }else{
+  model.settings.soundEnabled=!model.settings.soundEnabled;
+  if(model.settings.soundEnabled){
+   if(await armAudio()){soundPattern('soft');toast('Sound is on. Customise it using the cog.')}
+   else model.settings.soundEnabled=false;
+  }else toast('Sound muted');
+ }
  persist();renderSoundButton();
 };
 function renderSoundButton(){
  const b=$('soundButton');
- b.textContent=model.settings.soundEnabled?'🔊':'🔇';
- b.classList.toggle('on',Boolean(model.settings.soundEnabled));
- b.title=model.settings.soundEnabled?'Mute sounds':'Enable alert sounds';
+ const armed=Boolean(model.settings.soundEnabled&&audioCtx?.state==='running');
+ b.textContent=armed?'🔊':model.settings.soundEnabled?'🔔':'🔇';
+ b.classList.toggle('on',armed);
+ b.title=armed?'Mute sounds':model.settings.soundEnabled?'Tap once to activate sounds for this session':'Enable alert sounds';
  b.setAttribute('aria-label',b.title);
 }
 $('prevWeek').onclick=()=>{selected=addDays(selected,-7);render()};
